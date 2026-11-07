@@ -1,0 +1,16 @@
+package com.empresa.reembolsos.procesamiento.notificacion;
+
+import org.springframework.stereotype.Component;
+
+import com.empresa.reembolsos.dominio.EstadoSolicitud;
+import com.empresa.reembolsos.dominio.SolicitudReembolso;
+
+@Component
+public class NotificadorEmpleado implements ObservadorCambioEstado {
+
+    @Override
+    public void onCambioEstado(SolicitudReembolso solicitud, EstadoSolicitud estadoAnterior) {
+        System.out.println("Notificando a " + solicitud.getEmpleadoId()
+                + ": su solicitud paso de " + estadoAnterior + " a " + solicitud.getEstado());
+    }
+}
