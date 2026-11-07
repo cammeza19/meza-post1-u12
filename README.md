@@ -181,7 +181,7 @@ El workflow [`.github/workflows/arquitectura.yml`](.github/workflows/arquitectur
 
 **Captura 3 — log del job mostrando el mensaje de ArchUnit:**
 
-![Log de ArchUnit con la violación de procesamientoSinPersistenciaNiWeb](docs/img/pipeline-log-archunit.png)
+![Log de ArchUnit con la violación de procesamientoSinPersistenciaNiWeb](docs/img/pipeline-log-archunit.jpeg)
 
 ---
 
