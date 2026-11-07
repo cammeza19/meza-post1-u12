@@ -1,11 +1,15 @@
 package com.empresa.reembolsos.procesamiento.validacion;
 
 import com.empresa.reembolsos.dominio.SolicitudReembolso;
+import com.empresa.reembolsos.infraestructura.RepositorioSolicitudesJpa; // <-- VIOLACIÓN ARQUITECTÓNICA
 import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
 public class ValidadorDuplicados extends ValidadorSolicitud {
+
+    // Se agrega este campo para forzar la dependencia en el bytecode compilado
+    private RepositorioSolicitudesJpa repositorioViolacion;
 
     @Override
     protected ResultadoValidacion validarPropio(SolicitudReembolso solicitud, List<SolicitudReembolso> pendientes) {
