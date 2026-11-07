@@ -37,3 +37,26 @@
 ### Decisión de Diseño 4: Distinción entre anotaciones de estereotipo y dependencias técnicas en ArchUnit
 * **Contexto:** La Regla 1 prohíbe que el paquete `procesamiento` dependa de `infraestructura`, `adaptadores`, `org.springframework.data..` y `jakarta.persistence..`, pero permite anotaciones de Spring como `@Component`.
 * **Justificación técnica:** Las anotaciones de estereotipo como `@Component` son metadatos puramente declarativos para la Inyección de Dependencias (IoC), lo que permite que Spring ensamble automáticamente los validadores, calculadoras y observadores sin acoplarlos a infraestructura pesada. Lo que degrada la arquitectura y viola la separación de responsabilidades no es el contenedor de inyección, sino el acoplamiento a tecnologías de persistencia (JPA, SQL) o protocolos web (HTTP, servlets). Prohibir todo Spring forzaría la creación manual de fábricas boilerplate sin aportar valor arquitectónico real.
+
+## Análisis de Impacto: Qué se descartó por sobreingeniería y por qué
+
+Durante el diseño e implementación del proyecto se evaluaron alternativas más complejas que fueron descartadas conscientemente para evitar la deuda cognitiva y la complejidad accidental:
+
+### 1. Spring ApplicationEventPublisher en vez de una lista de observadores inyectada
+* **Qué se consideró:** Publicar un evento de dominio desacoplado (`SolicitudEstadoCambiadoEvent`) utilizando el bus interno de Spring (`ApplicationEventPublisher` y `@EventListener`).
+* **Por qué se descartó:** Con exactamente tres suscriptores fijos y conocidos en tiempo de compilación (empleado, contabilidad y auditoría), la indirección de un bus de eventos no aporta desacoplamiento real adicional frente a la interfaz `ObservadorCambioEstado`. Además, dificulta la trazabilidad y la depuración del flujo al no ser evidente quién consume el evento en el código fuente.
+* **Señal futura para reconsiderar:** Si en el futuro los suscriptores requieren ejecutarse de forma asíncrona (`@Async`) o procesarse en hilos separados para no bloquear la respuesta HTTP.
+
+---
+
+### 2. Patrón Visitor o Abstract Factory para exportación de reportes
+* **Qué se consideró:** Diseñar una jerarquía de exportadores para generar reportes en formatos PDF, Excel y CSV previendo solicitudes de la gerencia de Finanzas.
+* **Por qué se descartó:** Hoy en día no existe un requerimiento real de exportación en múltiples formatos; solo se maneja el formato estructurado JSON en la API REST. Construir abstracciones para formatos hipotéticos viola la **Rule of Three** y el principio **YAGNI**.
+* **Señal futura para reconsiderar:** Si al menos dos áreas de negocio solicitan formalmente descargas periódicas de solicitudes en formatos ofimáticos concretos.
+
+---
+
+### 3. Jerarquía tipada de excepciones por cada validador vs. Excepción unificada (Elemento propio)
+* **Qué se consideró:** Crear una clase de excepción especializada para cada eslabón de la cadena (`DocumentosSoporteFaltantesException`, `TopeMontoExcedidoException`, `SolicitudDuplicadaException`) extendiendo de una clase abstracta común `ValidacionReembolsoException`.
+* **Por qué se descartó:** En el estado actual, el cliente HTTP solo necesita conocer el mensaje descriptivo del rechazo para informar al usuario (`SolicitudInvalidaException(motivoRechazo)`). Crear tres subclases adicionales habría añadido indirección y archivos vacíos sin aportar lógica diferenciada en el manejo de errores (principio **KISS** y evitar *shallow modules*).
+* **Señal futura para reconsiderar:** Si el cliente frontend o sistemas integradores requieren códigos de error numéricos/alfanuméricos normalizados o si diferentes tipos de rechazo desencadenan flujos de compensación o reintentos automáticos distintos.
